@@ -1,196 +1,264 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
-namespace kiralyno
+namespace N_QueenProblem
 {
+    public struct uniquePositionStruct
+    {
+        public int valueOfX,valueOfY;
+    }
     class Program
     {
+
         static void Main(string[] args)
         {
-            bool[,] tabla = new bool[8, 8];
-            bool[,] rakhato = new bool[8, 8];
+            Stopwatch stopwatchThatMeasuresTimeAndShit = new Stopwatch();
+            stopwatchThatMeasuresTimeAndShit.Start();
 
-            int X = 0, Y = 0, elozoX = 0;
+            Console.CursorVisible = false;
 
-            for (int i = 0; i < rakhato.GetLength(0); i++)
+            int sizeOfMatrixPerSide = 8;
+            decimal numberOfSteps = 0;
+
+            bool[,] isThereA_QueenThere = new bool[sizeOfMatrixPerSide, sizeOfMatrixPerSide];
+            bool[,] isThereFreeSpaceAtPoint = new bool[sizeOfMatrixPerSide, sizeOfMatrixPerSide];
+
+            List<uniquePositionStruct> placedQueenAtPosition = new List<uniquePositionStruct>();
+
+            bool[] isThereQueenYet = new bool[sizeOfMatrixPerSide];
+
+            #region change the value of every element in matrix
+            for (int outerLoopVariable = 0; outerLoopVariable < isThereFreeSpaceAtPoint.GetLength(0); outerLoopVariable++)
             {
 
-                for (int j = 0; j < rakhato.GetLength(1); j++)
+                for (int innerLoopVariable = 0; innerLoopVariable < isThereFreeSpaceAtPoint.GetLength(1); innerLoopVariable++)
                 {
-                    rakhato[i, j] = true;
+                    isThereFreeSpaceAtPoint[outerLoopVariable, innerLoopVariable] = true;
                 }
 
             }
+            #endregion
+
+            #region Solving the N-Queen problem with the Backtrack algorythm method because just.
+
+            for (int outerLoopVariable = 0; outerLoopVariable < isThereFreeSpaceAtPoint.GetLength(0); outerLoopVariable++)
+            {
+                for (int innerLoopVariable = 0; innerLoopVariable < isThereFreeSpaceAtPoint.GetLength(1); innerLoopVariable++)
+                {
+                    uniquePositionStruct Temp = new uniquePositionStruct();
+
+                    if (isThereFreeSpaceAtPoint[outerLoopVariable, innerLoopVariable])
+                    {
+                        putQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(innerLoopVariable, outerLoopVariable, isThereFreeSpaceAtPoint, isThereA_QueenThere);
+
+                        Temp.valueOfX = innerLoopVariable;
+                        Temp.valueOfY = outerLoopVariable;
+                        placedQueenAtPosition.Add(Temp);
+                        isThereQueenYet[outerLoopVariable] = true;
+
+                        numberOfSteps++;
+                    }
+                    else if (!isThereQueenYet[outerLoopVariable] && isThereQueenYet[outerLoopVariable - 1] && !isThereFreeSpaceAtPoint[outerLoopVariable, innerLoopVariable] && innerLoopVariable == isThereFreeSpaceAtPoint.GetLength(1) - 1 && outerLoopVariable > 0 && placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX < isThereFreeSpaceAtPoint.GetLength(1) - 1)
+                    {
+                        removesQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX, placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfY, isThereFreeSpaceAtPoint, isThereA_QueenThere);
+
+                        isThereQueenYet[outerLoopVariable - 1] = false;
+
+                        innerLoopVariable = placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX;
+                        outerLoopVariable = placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfY;
+
+                        placedQueenAtPosition.RemoveAt(placedQueenAtPosition.Count - 1);
+
+                        numberOfSteps++;
+                    }
+                    else if (placedQueenAtPosition.Count > 1 && !isThereQueenYet[outerLoopVariable] && isThereQueenYet[outerLoopVariable - 1] && isThereQueenYet[outerLoopVariable - 2] && !isThereFreeSpaceAtPoint[outerLoopVariable, innerLoopVariable] && innerLoopVariable == isThereFreeSpaceAtPoint.GetLength(1) - 1 && outerLoopVariable > 1 && placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX == isThereFreeSpaceAtPoint.GetLength(1) - 1)
+                    {
+                        removesQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX, placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfY, isThereFreeSpaceAtPoint, isThereA_QueenThere);
+                        placedQueenAtPosition.RemoveAt(placedQueenAtPosition.Count - 1);
+                        removesQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX, placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfY, isThereFreeSpaceAtPoint, isThereA_QueenThere);
+                        
+                        isThereQueenYet[outerLoopVariable - 1] = false;
+                        isThereQueenYet[outerLoopVariable - 2] = false;
+
+                        innerLoopVariable = placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfX;
+                        outerLoopVariable = placedQueenAtPosition[placedQueenAtPosition.Count - 1].valueOfY;
+
+                        placedQueenAtPosition.RemoveAt(placedQueenAtPosition.Count - 1);
+
+                        numberOfSteps++;
+                    }
+                }
+
+                #endregion
             
-
-                
-
-            Console.WriteLine();
-            abrazol(tabla);
-            Console.WriteLine();
-            abrazol(rakhato);
+            }
+            drawSpecifiedBoolMatrixOnScreen(isThereA_QueenThere);
+            Console.WriteLine("\nEltelt idő: {0}\nLépések száma: {1}", stopwatchThatMeasuresTimeAndShit.Elapsed.ToString(),numberOfSteps);
             Console.ReadLine();
         }
 
-        static void abrazol(bool[,] matrix)
+        static void drawSpecifiedBoolMatrixOnScreen(bool[,] referredBoolMatrix)
         {
-            for (int i = 0; i < matrix.GetLength(0); i++)
+            for (int outerLoopVariable = 0; outerLoopVariable < referredBoolMatrix.GetLength(0); outerLoopVariable++)
             {
 
-                for (int j = 0; j < matrix.GetLength(1); j++)
+                for (int innerLoopVariable = 0; innerLoopVariable < referredBoolMatrix.GetLength(1); innerLoopVariable++)
                 {
-                    if (matrix[i,j])
+                    
+
+                    if (referredBoolMatrix[outerLoopVariable, innerLoopVariable])
                     {
-                        Console.Write("O");
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.Write(" ");
+                    }
+                    else if ((innerLoopVariable % 2 == 0 && outerLoopVariable % 2 == 0) || (innerLoopVariable % 2 != 0 && outerLoopVariable % 2 != 0))
+                    {
+                        Console.BackgroundColor = ConsoleColor.White;
+                        Console.Write(" ");
                     }
                     else
                     {
-                        Console.Write("+");
+                        Console.BackgroundColor = ConsoleColor.Gray;
+                        Console.Write(" ");
                     }
                 }
-
+                Console.BackgroundColor = ConsoleColor.Black;
                 Console.WriteLine();
             }
         }
-        static void rak(int pozX, int pozY, bool[,] refRakhato, bool[,] refTabla, string tipus="alap")
+        static void putQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(int position_X, int position_Y, bool[,] referenceToFreeSpaceMatrix, bool[,] referenceToQueenMatrix)
         {
-            if (tipus == "alap")
+            
+
+            referenceToQueenMatrix[position_Y, position_X] = true;
+
+            for (int loopVariable = 0; loopVariable < referenceToFreeSpaceMatrix.GetLength(0); loopVariable++)
             {
-                Console.WriteLine("Hozzáadtam egy elemet!");
+                referenceToFreeSpaceMatrix[loopVariable, position_X] = false;
             }
 
-            refTabla[pozY, pozX] = true;
-
-
-            for (int i = 0; i < refRakhato.GetLength(0); i++)
+            for (int loopVariable = 0; loopVariable < referenceToFreeSpaceMatrix.GetLength(1); loopVariable++)
             {
-                refRakhato[i, pozX] = false;
+                referenceToFreeSpaceMatrix[position_Y, loopVariable] = false;
             }
 
-            for (int i = 0; i < refRakhato.GetLength(1); i++)
+            for (int outerLoopVariable = position_Y; outerLoopVariable < referenceToFreeSpaceMatrix.GetLength(0); outerLoopVariable++)
             {
-                refRakhato[pozY, i] = false;
-            }
-
-            for (int i = pozY; i < refRakhato.GetLength(0); i++)
-            {
-                for (int j = pozX; j < refRakhato.GetLength(1); j++)
+                for (int innerLoopVariable = position_X; innerLoopVariable < referenceToFreeSpaceMatrix.GetLength(1); innerLoopVariable++)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = false;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = false;
                     }
                 }
             }
 
-            for (int i = pozY; i >= 0; i--)
+            for (int outerLoopVariable = position_Y; outerLoopVariable >= 0; outerLoopVariable--)
             {
-                for (int j = pozX; j >= 0; j--)
+                for (int innerLoopVariable = position_X; innerLoopVariable >= 0; innerLoopVariable--)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = false;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = false;
                     }
                 }
             }
 
-            for (int i = pozY; i >= 0; i--)
+            for (int outerLoopVariable = position_Y; outerLoopVariable >= 0; outerLoopVariable--)
             {
-                for (int j = pozX; j < refRakhato.GetLength(1); j++)
+                for (int innerLoopVariable = position_X; innerLoopVariable < referenceToFreeSpaceMatrix.GetLength(1); innerLoopVariable++)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = false;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = false;
                     }
                 }
             }
 
-            for (int i = pozY; i < refRakhato.GetLength(0); i++)
+            for (int outerLoopVariable = position_Y; outerLoopVariable < referenceToFreeSpaceMatrix.GetLength(0); outerLoopVariable++)
             {
-                for (int j = pozX; j >= 0; j--)
+                for (int innerLoopVariable = position_X; innerLoopVariable >= 0; innerLoopVariable--)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = false;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = false;
                     }
                 }
             }
             
         }
-        static void elvesz(int pozX, int pozY, bool[,] refRakhato, bool[,] refTabla)
+        static void removesQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(int position_X, int position_Y, bool[,] referenceToFreeSpaceMatrix, bool[,] referenceToQueenMatrix)
         {
-            refTabla[pozY, pozX] = false;
+            referenceToQueenMatrix[position_Y, position_X] = false;
 
-            for (int i = 0; i < refRakhato.GetLength(0); i++)
+            for (int loopVariable = 0; loopVariable < referenceToFreeSpaceMatrix.GetLength(0); loopVariable++)
             {
-                refRakhato[i, pozX] = true;
+                referenceToFreeSpaceMatrix[loopVariable, position_X] = true;
             }
 
-            for (int i = 0; i < refRakhato.GetLength(1); i++)
+            for (int loopVariable = 0; loopVariable < referenceToFreeSpaceMatrix.GetLength(1); loopVariable++)
             {
-                refRakhato[pozY, i] = true;
+                referenceToFreeSpaceMatrix[position_Y, loopVariable] = true;
             }
 
-            for (int i = pozY; i < refRakhato.GetLength(0); i++)
+            for (int outerLoopVariable = position_Y; outerLoopVariable < referenceToFreeSpaceMatrix.GetLength(0); outerLoopVariable++)
             {
-                for (int j = pozX; j < refRakhato.GetLength(1); j++)
+                for (int innerLoopVariable = position_X; innerLoopVariable < referenceToFreeSpaceMatrix.GetLength(1); innerLoopVariable++)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = true;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = true;
                     }
                 }
             }
 
-            for (int i = pozY; i >= 0; i--)
+            for (int outerLoopVariable = position_Y; outerLoopVariable >= 0; outerLoopVariable--)
             {
-                for (int j = pozX; j >= 0; j--)
+                for (int j = position_X; j >= 0; j--)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - j) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = true;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, j] = true;
                     }
                 }
             }
 
-            for (int i = pozY; i >= 0; i--)
+            for (int outerLoopVariable = position_Y; outerLoopVariable >= 0; outerLoopVariable--)
             {
-                for (int j = pozX; j < refRakhato.GetLength(1); j++)
+                for (int innerLoopVariable = position_X; innerLoopVariable < referenceToFreeSpaceMatrix.GetLength(1); innerLoopVariable++)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = true;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = true;
                     }
                 }
             }
 
-            for (int i = pozY; i < refRakhato.GetLength(0); i++)
+            for (int outerLoopVariable = position_Y; outerLoopVariable < referenceToFreeSpaceMatrix.GetLength(0); outerLoopVariable++)
             {
-                for (int j = pozX; j >= 0; j--)
+                for (int innerLoopVariable = position_X; innerLoopVariable >= 0; innerLoopVariable--)
                 {
-                    if (Math.Abs(pozX - j) == Math.Abs(pozY - i))
+                    if (Math.Abs(position_X - innerLoopVariable) == Math.Abs(position_Y - outerLoopVariable))
                     {
-                        refRakhato[i, j] = true;
+                        referenceToFreeSpaceMatrix[outerLoopVariable, innerLoopVariable] = true;
                     }
                 }
             }
 
-            for (int i = 0; i < refTabla.GetLength(0); i++)
+            for (int outerLoopVariable = 0; outerLoopVariable < referenceToQueenMatrix.GetLength(0); outerLoopVariable++)
             {
 
-                for (int j = 0; j < refTabla.GetLength(1); j++)
+                for (int innerLoopVariable = 0; innerLoopVariable < referenceToQueenMatrix.GetLength(1); innerLoopVariable++)
                 {
 
-                    if (refTabla[i, j])
+                    if (referenceToQueenMatrix[outerLoopVariable, innerLoopVariable])
                     {
-                        rak(i, j, refRakhato, refTabla,"elvétel");
+                        putQueenAtPositionInBoolMatrixAndSpecifiesFreeSpaces(innerLoopVariable, outerLoopVariable, referenceToFreeSpaceMatrix, referenceToQueenMatrix);
                     }
                 }
             }
-            Console.WriteLine("Elvettem egy elemet!");
+
         }
     }
     
